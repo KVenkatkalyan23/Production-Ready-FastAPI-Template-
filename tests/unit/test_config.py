@@ -50,6 +50,7 @@ def test_settings_require_secret_configuration() -> None:
             CORS_ORIGINS=["http://localhost:3000"],
             LOG_LEVEL="INFO",
             LOG_JSON=False,
+            _env_file=None,
         )
     except ValidationError as exc:
         assert "JWT_SECRET_KEY" in str(exc)

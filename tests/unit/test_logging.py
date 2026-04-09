@@ -5,6 +5,7 @@ from __future__ import annotations
 import io
 import json
 import logging
+import sys
 
 from app.core.logging import JsonFormatter, configure_logging
 
@@ -15,6 +16,7 @@ def test_json_formatter_includes_exception_text() -> None:
     try:
         raise RuntimeError("boom")
     except RuntimeError:
+        exc_info = sys.exc_info()
         record = logging.getLogger("json-test").makeRecord(
             "json-test",
             logging.ERROR,
@@ -22,7 +24,7 @@ def test_json_formatter_includes_exception_text() -> None:
             10,
             "Failure",
             args=(),
-            exc_info=True,
+            exc_info=exc_info,
             extra={"error_code": "INTERNAL_SERVER_ERROR", "details": {"stage": "test"}},
         )
 
