@@ -3,6 +3,7 @@
 import logging
 
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 
 from app.core.config import settings
 from app.core.logging import configure_logging
@@ -13,6 +14,14 @@ configure_logging(settings.LOG_LEVEL, settings.LOG_JSON)
 logger = logging.getLogger(__name__)
 
 app = FastAPI(title=settings.APP_NAME, debug=settings.DEBUG)
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=settings.CORS_ORIGINS,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 
 @app.on_event("startup")

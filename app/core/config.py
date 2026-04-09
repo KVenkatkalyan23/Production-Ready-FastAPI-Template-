@@ -69,6 +69,15 @@ class Settings(BaseSettings):
             return ACTIVE_ENVIRONMENT
         return str(value).strip().lower()
 
+    @field_validator("CORS_ORIGINS", mode="before")
+    @classmethod
+    def normalize_cors_origins(cls, value: object) -> object:
+        """Normalize configured CORS origins by trimming whitespace."""
+
+        if isinstance(value, list):
+            return [str(origin).strip() for origin in value]
+        return value
+
     @property
     def env_file(self) -> str:
         """Expose the selected environment file for startup diagnostics."""
