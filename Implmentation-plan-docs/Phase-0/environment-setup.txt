@@ -1,0 +1,225 @@
+﻿Implementation Plan: Dynamic Environment Setup with Logging
+Objective
+Implement environment-based configuration for the FastAPI template such that:
+* the active environment is selected from a root .env
+* environment-specific settings are loaded from .env.<environment>
+* adding a new environment does not require code changes
+* logging records which environment and env file were loaded
+________________
+
+
+Scope
+This task includes:
+* root environment selector
+* separate env files for each environment
+* dynamic Settings loader
+* startup logging for config loading
+* no business feature logic
+This task does not include:
+* auth
+* DB model creation
+* endpoint feature implementation beyond minimal startup/health check
+________________
+
+
+Files to Create
+.env
+.env.development
+.env.testing
+.env.production
+app/core/config.py
+app/core/logging.py
+app/main.py
+.env.example
+________________
+
+
+Implementation Steps
+Step 1: Create root environment selector
+Create a root .env file that contains only the active environment selector.
+Example:
+ENVIRONMENT=development
+Behavior:
+* this file decides which environment config should be loaded
+* valid examples: development, testing, production
+* code must not hardcode these values as fixed allowed options
+________________
+
+
+Step 2: Create separate environment files
+Create:
+* .env.development
+* .env.testing
+* .env.production
+Each file should contain full application settings, such as:
+* APP_NAME
+* DEBUG
+* LOG_LEVEL
+* LOG_JSON
+* DATABASE_URL
+* JWT_SECRET_KEY
+* JWT_ALGORITHM
+* ACCESS_TOKEN_EXPIRE_MINUTES
+* CORS_ORIGINS
+Requirement:
+* each environment file should be independently usable
+* values must differ appropriately by environment
+________________
+
+
+Step 3: Implement dynamic environment detection
+In app/core/config.py:
+Build logic to determine the active environment in this order:
+1. read ENVIRONMENT from system environment if present
+2. otherwise read ENVIRONMENT from root .env
+3. otherwise default to development
+Requirement:
+* the code must dynamically construct the env filename using:
+   * .env.<environment>
+* the code must not require modification when a new environment is added
+* example:
+   * ENVIRONMENT=staging should load .env.staging automatically if that file exists
+________________
+
+
+Step 4: Create Settings class
+In app/core/config.py:
+Create a Settings class using pydantic-settings.
+Add fields for:
+* APP_NAME
+* ENVIRONMENT
+* DEBUG
+* DATABASE_URL
+* JWT_SECRET_KEY
+* JWT_ALGORITHM
+* ACCESS_TOKEN_EXPIRE_MINUTES
+* CORS_ORIGINS
+* LOG_LEVEL
+* LOG_JSON
+Requirements:
+* load values from the dynamically selected env file
+* ignore extra values safely
+* normalize environment value if needed
+* expose the active env filename for logging/debugging
+* instantiate settings = Settings()
+________________
+
+
+Step 5: Add logging configuration
+In app/core/logging.py:
+Implement reusable logging setup.
+Requirements:
+* support plain text logs for development/testing
+* support JSON logs for production
+* log level must come from settings
+* log format type must come from settings
+* clear default handlers before adding the configured one
+Suggested features:
+* configure_logging(log_level: str, log_json: bool) -> None
+* custom JSON formatter for structured logs
+________________
+
+
+Step 6: Wire config + logging into app startup
+In app/main.py:
+* import settings
+* configure logging before app startup completes
+* log:
+   * application startup
+   * selected environment
+   * selected env file
+* create FastAPI app using values from settings
+* add a minimal /health endpoint
+Requirements:
+* app must start successfully in all environments
+* startup logs must clearly show active environment selection
+________________
+
+
+Step 7: Support future environments without code changes
+Validate that the implementation works for future environments.
+Example expected behavior:
+* if .env contains ENVIRONMENT=staging
+* and .env.staging exists
+* app should load .env.staging
+* no change should be required in Python code
+This is a mandatory acceptance criterion.
+________________
+
+
+Functional Requirements
+Environment selection
+* app must determine active environment dynamically
+* app must load .env.<environment> based on the active environment
+Logging
+* app must log selected environment at startup
+* app must log selected env file at startup
+* log level must be configurable by environment
+* log format must be configurable by environment
+Extensibility
+* adding a new environment must only require:
+   * changing ENVIRONMENT in root .env
+   * adding a corresponding .env.<environment> file
+________________
+
+
+Non-Functional Requirements
+* no hardcoded secrets
+* no hardcoded environment branching for each env name
+* code should be clean and maintainable
+* startup behavior should be observable through logs
+* configuration loading should fail clearly if required values are missing
+________________
+
+
+Acceptance Criteria
+Configuration
+* root .env exists and contains ENVIRONMENT
+* .env.development, .env.testing, and .env.production exist
+* Settings class loads from the correct env file dynamically
+Logging
+* startup logs display:
+   * app startup
+   * active environment
+   * active env file
+* development can use plain logs
+* production can use JSON logs
+Extensibility
+* adding .env.staging and setting ENVIRONMENT=staging works without code changes
+Runtime
+* app starts successfully with uvicorn app.main:app --reload
+* /health returns success
+________________
+
+
+Suggested Deliverables
+* dynamic config.py
+* reusable logging.py
+* root .env
+* environment-specific env files
+* working main.py
+* startup logs proving the correct env was loaded
+________________
+
+
+Suggested Validation Steps
+Validation 1: development
+* set ENVIRONMENT=development
+* run app
+* verify .env.development is loaded
+* verify startup logs show development
+Validation 2: testing
+* set ENVIRONMENT=testing
+* run app
+* verify .env.testing is loaded
+* verify testing log configuration is applied
+Validation 3: production
+* set ENVIRONMENT=production
+* run app
+* verify .env.production is loaded
+* verify JSON logging is enabled if configured
+Validation 4: future env
+* create .env.staging
+* set ENVIRONMENT=staging
+* run app
+* verify .env.staging loads without code changes

@@ -1,0 +1,219 @@
+﻿Create folder structure
+
+app/
+├── main.py
+├── core/
+│   ├── config.py
+│   ├── security.py
+│   ├── logging.py
+│   ├── exceptions.py
+│   └── exception_handlers.py
+├── db/
+│   ├── session.py
+│   ├── base.py
+│   ├── models/
+│   │   ├── base.py
+│   │   └── user.py
+│   └── repositories/
+│       └── user.py
+├── schemas/
+│   ├── auth.py
+│   ├── user.py
+│   └── error.py
+├── services/
+│   ├── auth_service.py
+│   └── user_service.py
+└── api/
+    ├── dependencies/
+    │   └── auth.py
+    └── v1/
+        ├── router.py
+        └── endpoints/
+            ├── auth.py
+            ├── users.py
+            └── health.py
+tests/
+├── conftest.py
+├── unit/
+│   ├── test_security.py
+│   ├── test_auth_service.py
+│   └── test_user_service.py
+├── integration/
+│   ├── test_auth_routes.py
+│   ├── test_user_routes.py
+│   └── test_health_routes.py
+└── fixtures/
+    ├── users.py
+    └── auth.py
+
+
+Add Success/Error Response Models
+Objective
+Create reusable response schemas so all endpoints return a consistent success/error structure.
+________________
+
+
+Scope
+Includes:
+* success response schema
+* error response schema
+* shared base response schema
+* support for message, data, error
+Excludes:
+* exception handlers
+* business logic
+* logging
+* auth-specific response models
+________________
+
+
+Files
+* app/schemas/base.py
+* app/schemas/success.py
+* app/schemas/error.py
+Optional:
+* app/schemas/__init__.py
+________________
+
+
+Target Format
+Success
+{
+ "success": true,
+ "message": "Request completed successfully",
+ "data": {}
+}
+Error
+{
+ "success": false,
+ "message": "Request failed",
+ "error": {
+   "code": "...",
+   "details": {}
+ }
+}
+________________
+
+
+What to implement
+base.py
+Create BaseResponse with:
+* success
+* message
+success.py
+Create SuccessResponse extending BaseResponse with:
+* success: bool = True
+* data: Any | None = None
+error.py
+Create:
+* ErrorDetail
+   * code: str
+   * details: Any | None = None
+* ErrorResponse extending BaseResponse with:
+   * success: bool = False
+   * error: ErrorDetail
+________________
+
+
+Requirements
+* keep schemas generic
+* no auth/user/DB-specific fields
+* no HTTP status code inside schema
+* OpenAPI-friendly
+* reusable in routes and handlers
+________________
+
+
+Acceptance
+* BaseResponse exists
+* SuccessResponse exists
+* ErrorDetail exists
+* ErrorResponse exists
+* all success responses follow one structure
+* all error responses follow one structure
+________________
+
+
+Validation
+Success
+SuccessResponse(message="OK", data={"status": "healthy"})
+Error
+ErrorResponse(
+   message="Validation failed",
+   error=ErrorDetail(code="VALIDATION_ERROR", details={"email": "invalid"})
+)
+________________
+
+
+Deliverables
+* reusable base response schema
+* reusable success response schema
+* reusable error response schema
+* ready for future route and exception-handler integration
+
+
+Task: Add Global Exception Handling Skeleton (Concise)
+Files
+* app/core/exceptions.py
+* app/core/exception_handlers.py
+________________
+
+
+What to implement
+1. Base Exception
+Create AppException with:
+* message
+* error_code
+* status_code
+* details (optional)
+________________
+
+
+2. Exception Handlers
+In exception_handlers.py, add:
+* register_exception_handlers(app)
+Handlers for:
+* AppException
+* HTTPException
+* RequestValidationError
+* generic Exception
+________________
+
+
+3. Response Format
+All handlers must return:
+{
+ "success": false,
+ "message": "...",
+ "error": {
+   "code": "...",
+   "details": null
+ }
+}
+Use ErrorResponse schema.
+________________
+
+
+4. Behavior
+* AppException → use its status + code
+* HTTPException → map to standard format
+* ValidationError → 422 + VALIDATION_ERROR
+* Exception → 500 + safe message
+________________
+
+
+5. Integration
+In main.py:
+register_exception_handlers(app)
+________________
+
+
+Acceptance
+* All errors return same structure
+* No raw exceptions exposed
+* Easy to extend later
+
+
+
+
+Task : Initialize FastAPI app
