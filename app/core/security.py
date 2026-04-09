@@ -12,6 +12,12 @@ PASSWORD_DIGIT_PATTERN = re.compile(r"\d")
 PASSWORD_SPECIAL_PATTERN = re.compile(r"[^A-Za-z0-9]")
 
 
+def normalize_email(value: object) -> str:
+    """Normalize an email-like value for consistent validation and persistence."""
+
+    return str(value).strip().lower()
+
+
 def validate_password_strength(password: str) -> str:
     """Validate password strength and return the original password on success."""
 

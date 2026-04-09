@@ -1,5 +1,9 @@
 """FastAPI application entry point."""
 
+from __future__ import annotations
+
+from collections.abc import AsyncIterator
+from contextlib import asynccontextmanager
 import logging
 
 from fastapi import FastAPI
@@ -14,25 +18,32 @@ from app.schemas.success import SuccessResponse
 configure_logging(settings.LOG_LEVEL, settings.LOG_JSON)
 logger = logging.getLogger(__name__)
 
-app = FastAPI(title=settings.APP_NAME, debug=settings.DEBUG)
-
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=settings.CORS_ORIGINS,
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
-register_exception_handlers(app)
-
-
-@app.on_event("startup")
-async def log_startup() -> None:
+@asynccontextmanager
+async def lifespan(_: FastAPI) -> AsyncIterator[None]:
     """Emit startup diagnostics for environment and config loading."""
 
     logger.info("Application startup")
     logger.info("Active environment: %s", settings.ENVIRONMENT)
     logger.info("Active env file: %s", settings.env_file)
+    yield
+
+
+def create_app() -> FastAPI:
+    """Create and configure the FastAPI application."""
+
+    app = FastAPI(title=settings.APP_NAME, debug=settings.DEBUG, lifespan=lifespan)
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=settings.CORS_ORIGINS,
+        allow_credentials=True,
+        allow_methods=["*"],
+        allow_headers=["*"],
+    )
+    register_exception_handlers(app)
+    return app
+
+
+app = create_app()
 
 
 @app.get("/health", response_model=SuccessResponse)
