@@ -1,0 +1,138 @@
+﻿Implementation Plan: Security Features
+Objective
+Implement reusable security foundations so the API enforces strong validation, safe configuration, and secure access patterns across all current and future features.
+________________
+
+
+Scope
+Includes:
+* input validation using Pydantic
+* password strength validation
+* email format validation
+* CORS configuration
+* environment-based configuration for secrets and security settings
+Excludes:
+* auth flow implementation
+* rate limiting
+* CSRF protection
+* refresh tokens
+* advanced headers/middleware hardening
+________________
+
+
+Files
+* app/schemas/auth.py
+* app/schemas/user.py
+* app/core/security.py
+* app/core/config.py
+* app/main.py
+Optional:
+* app/utils/validators.py
+________________
+
+
+What to implement
+1. Input validation with Pydantic
+Use Pydantic models for all request bodies.
+Requirements:
+* validate required fields
+* validate field types
+* add constraints like min/max length
+* keep schemas reusable for future modules
+Examples:
+* registration request
+* login request
+* user create/update request
+________________
+
+
+2. Password strength validation
+Add reusable password validation logic.
+Rules:
+* minimum length
+* at least one uppercase
+* at least one lowercase
+* at least one number
+* at least one special character
+Implementation:
+* create a reusable validator/helper in core/security.py or utils/validators.py
+* use it in request schema validation or service layer
+Purpose:
+* same password rules should be reusable across all future auth-related features
+________________
+
+
+3. Email format validation
+Validate email fields using Pydantic email type.
+Implementation:
+* use EmailStr in schemas
+* standardize email normalization if needed
+Purpose:
+* reusable validation across registration, login, and future user-related entities
+________________
+
+
+4. CORS configuration
+Configure CORS in main.py using values from settings.
+Requirements:
+* origins must come from env/config
+* no hardcoded frontend domains
+* allow different configs per environment
+Examples:
+* development → localhost frontend
+* production → actual frontend domains
+Purpose:
+* secure and reusable cross-origin setup
+________________
+
+
+5. Environment-based configuration
+Move all sensitive and environment-dependent values to config.
+Examples:
+* JWT_SECRET_KEY
+* DATABASE_URL
+* CORS_ORIGINS
+* DEBUG
+* LOG_LEVEL
+Requirements:
+* no hardcoded secrets in code
+* values loaded from environment files
+* same code should work across dev/test/prod
+Purpose:
+* reusable secure configuration for all future features
+________________
+
+
+Functional Requirements
+* request payloads are validated before reaching business logic
+* weak passwords are rejected
+* invalid emails are rejected
+* CORS is configurable per environment
+* secrets are loaded from environment, not hardcoded
+________________
+
+
+Acceptance Criteria
+* request schemas use Pydantic validation
+* password validation is reusable and enforced
+* email fields use proper format validation
+* CORS middleware uses config-driven origins
+* secret/config values are read from environment files
+________________
+
+
+Validation
+* invalid request body returns validation error
+* weak password is rejected
+* invalid email is rejected
+* CORS changes when env config changes
+* app runs without hardcoded secrets
+________________
+
+
+Deliverables
+* reusable request validation schemas
+* reusable password validation logic
+* email validation using EmailStr
+* config-driven CORS setup
+* environment-based security configuration

@@ -1,0 +1,170 @@
+﻿Implementation Plan: Authentication & Authorization System
+Objective
+Implement a secure authentication and authorization system with registration, login, JWT-based access, protected routes, and role-based access control.
+________________
+
+
+Scope
+Includes:
+* user registration with email and password
+* user login with JWT token generation
+* secure password hashing and verification
+* protected routes for authenticated users
+* role-based access control (user, admin)
+Excludes:
+* refresh tokens
+* forgot/reset password
+* email verification
+* OAuth/social login
+________________
+
+
+Files
+* app/core/security.py
+* app/schemas/auth.py
+* app/services/auth_service.py
+* app/api/dependencies/auth.py
+* app/api/v1/endpoints/auth.py
+* app/api/v1/endpoints/users.py
+* app/db/repositories/user.py
+* app/db/models/user.py
+________________
+
+
+What to implement
+1. Registration
+Add user registration using:
+* email
+* password
+* full_name
+Flow:
+* validate input
+* check if email already exists
+* hash password
+* create user record
+* return safe user response
+________________
+
+
+2. Login
+Add login endpoint using:
+* email
+* password
+Flow:
+* find user by email
+* verify password hash
+* generate JWT token
+* return access token and token type
+________________
+
+
+3. Password Security
+In security.py add:
+* password hashing
+* password verification
+Requirement:
+* never store plain passwords
+* only store password_hash
+________________
+
+
+4. JWT Token Handling
+In security.py add:
+* token creation
+* token decode/verify
+Token payload should include:
+* user id or email
+* role
+* expiry
+________________
+
+
+5. Auth Schemas
+In schemas/auth.py create:
+* RegisterRequest
+* LoginRequest
+* TokenResponse
+* optional TokenPayload
+Keep responses generic and safe.
+________________
+
+
+6. Auth Service
+In auth_service.py implement:
+* register_user
+* login_user
+Responsibilities:
+* validate business flow
+* call repository methods
+* call password/JWT helpers
+* return clean response objects
+________________
+
+
+7. Protected Route Dependency
+In api/dependencies/auth.py add:
+* get_current_user
+Responsibilities:
+* read bearer token
+* validate JWT
+* fetch current user
+* reject invalid/expired token
+________________
+
+
+8. Role-Based Access Control
+Add reusable role check dependency, for example:
+* require_admin
+Behavior:
+* allow access only if current user role is admin
+* return forbidden error otherwise
+________________
+
+
+9. Endpoints
+In auth.py add:
+* POST /auth/register
+* POST /auth/login
+In users.py add:
+* GET /users/me → authenticated user
+* optional admin-only route for testing RBAC
+________________
+
+
+Functional Requirements
+* users can register with email/password
+* users can log in with valid credentials
+* password is stored only as hash
+* JWT is returned on successful login
+* protected routes require valid token
+* admin routes require admin role
+________________
+
+
+Acceptance Criteria
+* registration creates a new user
+* duplicate email registration is blocked
+* login returns JWT token
+* invalid login is rejected
+* /users/me works only with valid token
+* admin-only route blocks non-admin users
+________________
+
+
+Suggested Validation
+* register user successfully
+* login with correct credentials
+* reject wrong password
+* access protected route with token
+* reject protected route without token
+* reject admin route for normal user
+________________
+
+
+Deliverables
+* registration flow
+* login flow
+* password hashing and verification
+* JWT creation and validation
+* protected route dependency
+* role-based access control foundation

@@ -1,0 +1,133 @@
+﻿Implementation Plan: Testing Framework
+Objective
+Set up a reusable testing foundation with pytest, a separate test database, and a structure that supports unit and integration testing across all current and future features.
+________________
+
+
+Scope
+Includes:
+* pytest setup
+* separate test database configuration
+* shared test fixtures
+* unit and integration test structure
+* coverage reporting setup
+Excludes:
+* performance testing
+* load testing
+* e2e/browser testing
+* CI pipeline setup
+________________
+
+
+Files
+* tests/conftest.py
+* tests/unit/
+* tests/integration/
+* pytest.ini
+Optional:
+* .env.testing
+* tests/fixtures/
+* coverage.xml
+________________
+
+
+What to implement
+1. Pytest configuration
+Set up pytest.ini with:
+* test discovery config
+* async test support
+* coverage options
+Purpose:
+* standard test execution across the project
+________________
+
+
+2. Separate test database
+Use a dedicated test DB via .env.testing.
+Requirements:
+* test DB must be separate from dev/prod
+* tests should not affect real data
+* app dependencies should be overridable for tests
+Purpose:
+* safe, isolated testing
+________________
+
+
+3. Shared test fixtures
+In tests/conftest.py add reusable fixtures for:
+* test client
+* test DB session
+* dependency overrides
+* sample user/test data
+Purpose:
+* reuse across all future feature tests
+________________
+
+
+4. Unit test structure
+Create tests/unit/ for isolated tests:
+* security helpers
+* service logic
+* validators
+* utility functions
+Purpose:
+* fast tests for reusable logic
+________________
+
+
+5. Integration test structure
+Create tests/integration/ for API-level tests:
+* auth routes
+* protected routes
+* health endpoint
+* DB-backed flows
+Purpose:
+* verify full request → response behavior
+________________
+
+
+6. Coverage setup
+Configure coverage reporting.
+Requirements:
+* measure app code coverage
+* target 70%+ coverage
+* exclude unnecessary files if needed
+Purpose:
+* ensure important logic is tested
+________________
+
+
+Functional Requirements
+* pytest runs successfully
+* tests use separate test DB
+* fixtures are reusable
+* unit and integration tests are separated
+* coverage report is generated
+________________
+
+
+Acceptance Criteria
+* pytest.ini exists and works
+* tests/conftest.py provides shared fixtures
+* test DB is isolated from other environments
+* sample unit and integration tests run successfully
+* coverage is measurable and targetable to 70%+
+________________
+
+
+Validation
+* run pytest successfully
+* verify tests use .env.testing
+* verify test DB is separate
+* run sample unit tests
+* run sample integration tests
+* generate coverage report
+________________
+
+
+Deliverables
+* pytest configuration
+* separate test database setup
+* reusable test fixtures
+* unit/integration test structure
+* coverage reporting setup

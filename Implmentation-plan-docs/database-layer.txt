@@ -1,0 +1,124 @@
+﻿Implementation Plan: Database Layer (Reusable Design)
+Objective
+Implement a reusable and extensible database layer using PostgreSQL + async SQLAlchemy, with shared models and patterns that can be reused across all future features.
+________________
+
+
+Files to Create
+app/db/session.py
+app/db/base.py
+app/db/models/common.py
+app/db/models/user.py
+app/db/repositories/user.py
+________________
+
+
+Implementation Steps
+1. Setup Async Database Engine & Session
+File: app/db/session.py
+* Create async engine using:
+   * create_async_engine
+   * postgresql+asyncpg driver
+* Configure:
+   * connection pooling (pool_pre_ping, pool size)
+* Create:
+   * async_sessionmaker
+* Add:
+   * get_db() dependency (yield session)
+👉 Ensures non-blocking DB operations and scalability
+________________
+
+
+2. Define Declarative Base
+File: app/db/base.py
+* Create base ORM class
+* Import all models for metadata registration
+👉 Used for migrations and shared ORM structure
+________________
+
+
+3. Create Reusable Shared Model
+File: app/db/models/common.py
+Create reusable mixin with:
+* email (primary key)
+* created_at
+* updated_at
+Requirements:
+* timestamps auto-managed
+* reusable across all entities
+* no duplication in future models
+👉 This becomes the foundation for all future entities
+________________
+
+
+4. Create User Model
+File: app/db/models/user.py
+* Inherit from:
+   * Base
+   * shared model (common.py)
+* Fields:
+   * email (PK from mixin)
+   * password_hash
+   * full_name
+Rules:
+* no id
+* email is primary key
+* keep model extendable (future fields: role, status)
+________________
+
+
+5. Create Repository Layer
+File: app/db/repositories/user.py
+Add reusable DB operations:
+* create_user
+* get_by_email
+* list_users
+* update_user
+Rules:
+* no business logic
+* only DB interaction
+* async queries
+👉 Enables reuse across services and features
+________________
+
+
+Design Principles (Important)
+* Shared fields → common.py (reusable everywhere)
+* DB session → centralized (session.py)
+* Models → clean and extendable
+* Repositories → reusable pattern for all entities
+* No duplication across features
+👉 This structure supports scaling to:
+* admin
+* customer
+* orders
+* etc.
+________________
+
+
+Functional Requirements
+* async PostgreSQL connection works
+* sessions are properly created and closed
+* shared model provides common fields
+* user model uses email as PK
+* repository supports core DB operations
+________________
+
+
+Acceptance Criteria
+* get_db() works with dependency injection
+* User model has no id
+* email is primary key
+* created_at and updated_at auto-populate
+* repository methods work correctly
+* shared model reusable for new entities
+________________
+
+
+Validation Steps
+* connect to DB successfully
+* create user using email PK
+* fetch user by email
+* verify timestamps are auto-filled
+* reuse shared model in another dummy entity
+*

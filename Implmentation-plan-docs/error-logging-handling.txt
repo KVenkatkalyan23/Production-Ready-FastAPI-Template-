@@ -1,0 +1,163 @@
+﻿Implementation Plan: Error Handling & Logging
+Objective
+Implement a reusable, production-ready error handling and logging foundation so all features follow the same response format, logging pattern, and environment-specific behavior.
+________________
+
+
+Scope
+Includes:
+* global exception handlers for common errors
+* standardized error response format
+* structured logging
+* environment-based log levels and formats
+Excludes:
+* business-specific exception hierarchy
+* external log aggregation setup
+* tracing/metrics
+* alerting integrations
+________________
+
+
+Files
+* app/core/exceptions.py
+* app/core/exception_handlers.py
+* app/core/logging.py
+* app/schemas/error.py
+* app/main.py
+Optional:
+* app/middleware/logging.py
+________________
+
+
+What to implement
+1. Base exception structure
+Create reusable exceptions in exceptions.py.
+Add:
+* AppException
+   * message
+   * error_code
+   * status_code
+   * details
+Optional generic subclasses:
+* BadRequestException
+* UnauthorizedException
+* ForbiddenException
+* NotFoundException
+* ConflictException
+Purpose:
+* reusable across all current and future features
+________________
+
+
+2. Global exception handlers
+In exception_handlers.py, add centralized handlers for:
+* AppException
+* HTTPException
+* RequestValidationError
+* generic Exception
+Requirements:
+* all handlers return the same error response structure
+* preserve proper HTTP status codes
+* do not expose raw internal errors to clients
+________________
+
+
+3. Standardized error response format
+Use shared error schema for all handlers.
+Format:
+{
+ "success": false,
+ "message": "Request failed",
+ "error": {
+   "code": "ERROR_CODE",
+   "details": {}
+ }
+}
+Purpose:
+* same contract across all endpoints
+* reusable in future exception handling and APIs
+________________
+
+
+4. Structured logging
+In logging.py, configure reusable logging setup.
+Requirements:
+* support JSON logs
+* include key fields like:
+   * timestamp
+   * level
+   * logger name
+   * message
+* log exceptions in a structured way
+Purpose:
+* production-friendly logs
+* reusable across all modules
+________________
+
+
+5. Multi-environment logging behavior
+Use config-driven logging behavior.
+Examples:
+* development:
+   * LOG_LEVEL=DEBUG
+   * plain/human-readable logs
+* production:
+   * LOG_LEVEL=INFO
+   * LOG_JSON=true
+Requirements:
+* no hardcoded log level
+* no hardcoded log format
+* read from environment-based config
+________________
+
+
+6. App integration
+In main.py:
+* configure logging at startup
+* register exception handlers
+* log startup information like:
+   * app start
+   * selected environment
+   * env file loaded
+Optional:
+* add request logging middleware later
+________________
+
+
+Functional Requirements
+* all common errors are handled centrally
+* all error responses follow one structure
+* logs are structured and reusable
+* log behavior changes by environment
+* internal errors are hidden from clients
+________________
+
+
+Acceptance Criteria
+* AppException exists
+* exception handlers are centrally registered
+* validation errors return standard format
+* HTTP errors return standard format
+* unhandled errors return safe 500 response
+* logging is configurable by environment
+* production can emit JSON logs
+________________
+
+
+Validation
+* raise custom app exception → standard error response
+* raise validation error → 422 standard response
+* raise HTTPException → mapped standard response
+* raise unexpected exception → safe 500 response
+* verify dev logs are verbose
+* verify prod logs can be JSON
+________________
+
+
+Deliverables
+* reusable base exception classes
+* centralized exception handler registration
+* standardized error response handling
+* structured logging setup
+* environment-based log level/format configuration
+*
